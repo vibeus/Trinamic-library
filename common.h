@@ -138,4 +138,4 @@ extern TMC_spi_status_t tmc_spi_write (trinamic_motor_t driver, TMC_spi_datagram
 extern TMC_spi_status_t tmc_spi_read (trinamic_motor_t driver, TMC_spi_datagram_t *datagram);
 
 extern void tmc_uart_write (trinamic_motor_t driver, TMC_uart_write_datagram_t *datagram);
-extern TMC_uart_write_datagram_t *tmc_uart_read (trinamic_motor_t driver, TMC_uart_read_datagram_t *datagram);
+extern void tmc_uart_read (trinamic_motor_t driver, TMC_uart_read_datagram_t *datagram, TMC_uart_write_datagram_t *reply);

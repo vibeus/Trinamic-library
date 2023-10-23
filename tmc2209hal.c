@@ -39,7 +39,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <string.h>
 
-#include "grbl/hal.h"
+// #include "hal.h"
+#include "grblhal.h"
 
 #include "tmc2209.h"
 #include "tmchal.h"

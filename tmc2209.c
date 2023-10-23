@@ -43,6 +43,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "tmc2209.h"
 
@@ -132,9 +134,17 @@ bool TMC2209_Init (TMC2209_t *driver)
 {
     // Perform a status register read/write to clear status flags.
     // If no or bad response from driver return with error.
-    if(!TMC2209_ReadRegister(driver, (TMC2209_datagram_t *)&driver->gstat))
+    int resp = TMC2209_ReadRegister(driver, (TMC2209_datagram_t *)&driver->gstat);
+    printf("resp: %d\r\n", resp);
+    if(!resp){
+        printf("init failed\r\n");
         return false;
+    }
 
+    TMC2209_ReadRegister(driver, (TMC2209_datagram_t *)&driver->drv_status);
+
+    
+    
     TMC2209_WriteRegister(driver, (TMC2209_datagram_t *)&driver->gstat);
 
     TMC2209_ReadRegister(driver, (TMC2209_datagram_t *)&driver->gconf);
@@ -293,7 +303,7 @@ bool TMC2209_ReadRegister (TMC2209_t *driver, TMC2209_datagram_t *reg)
 {
     bool ok = false;
     TMC_uart_read_datagram_t datagram;
-    TMC_uart_write_datagram_t *res;
+    TMC_uart_write_datagram_t *res = (TMC_uart_write_datagram_t *)malloc(sizeof(TMC_uart_write_datagram_t));
 
     datagram.msg.sync = 0x05;
     datagram.msg.slave = driver->config.motor.address;
@@ -301,17 +311,22 @@ bool TMC2209_ReadRegister (TMC2209_t *driver, TMC2209_datagram_t *reg)
     datagram.msg.addr.write = 0;
     calcCRC(datagram.data, sizeof(TMC_uart_read_datagram_t));
 
-    res = tmc_uart_read(driver->config.motor, &datagram);
-
+    tmc_uart_read(driver->config.motor, &datagram, res);
+    
     if(res->msg.slave == 0xFF && res->msg.addr.value == datagram.msg.addr.value) {
         uint8_t crc = res->msg.crc;
-        calcCRC(res->data, sizeof(TMC_uart_write_datagram_t));
+        calcCRC(res->data, sizeof(res->data));
         if((ok = crc == res->msg.crc)) {
             reg->payload.value = res->msg.payload.value;
             byteswap(reg->payload.data);
+            
+            printf("[READ] reg 0x%x, val : %ld (0b", reg->addr.value, reg->payload.value);
+            for(int i = 31; i >= 0; i--){
+                printf("%ld", (reg->payload.value >> i) & 1);
+            }
+            printf(")\r\n");
         }
     }
-
     return ok;
 }
 
